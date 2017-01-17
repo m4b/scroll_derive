@@ -12,4 +12,4 @@ quote = "0.3.10"
 
 [dev-dependencies.scroll]
 version = "0.2.0"
-path = "../scroll"
+git = "https://github.com/m4b/scroll"
