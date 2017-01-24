@@ -19,7 +19,7 @@ fn impl_struct(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens {
     quote! {
         impl<'a> ::scroll::ctx::TryFromCtx<'a> for #name where #name: 'a {
             type Error = ::scroll::Error;
-            fn try_from_ctx(src: &'a [u8], (mut offset, ctx): (usize, ::scroll::Endian)) -> Result<Self, Self::Error> {
+            fn try_from_ctx(src: &'a [u8], (mut offset, ctx): (usize, ::scroll::Endian)) -> ::std::result::Result<Self, Self::Error> {
                 use ::scroll::Gread;
                 let mut offset = &mut offset;
                 let data  = #name { #(#items,)* };
@@ -65,7 +65,7 @@ fn impl_try_into_ctx(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens 
     quote! {
         impl ::scroll::ctx::TryIntoCtx for #name {
             type Error = ::scroll::Error;
-            fn try_into_ctx(self, mut dst: &mut [u8], (mut offset, ctx): (usize, ::scroll::Endian)) -> Result<(), Self::Error> {
+            fn try_into_ctx(self, mut dst: &mut [u8], (mut offset, ctx): (usize, ::scroll::Endian)) -> ::std::result::Result<(), Self::Error> {
                 use ::scroll::Gwrite;
                 let mut offset = &mut offset;
                 #(#items;)*;
