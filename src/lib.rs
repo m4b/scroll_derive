@@ -12,7 +12,7 @@ fn impl_struct(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens {
         let ident = &f.ident;
         let ty = &f.ty;
         quote! {
-            #ident: src.gread::<#ty>(offset, ctx)?
+            #ident: src.gread_with::<#ty>(offset, ctx)?
         }
     }).collect();
     
@@ -58,7 +58,7 @@ fn impl_try_into_ctx(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens 
     let items: Vec<_> = fields.iter().map(|f| {
         let ident = &f.ident;
         quote! {
-            dst.gwrite(self.#ident, offset, ctx)?
+            dst.gwrite_with(self.#ident, offset, ctx)?
         }
     }).collect();
     
