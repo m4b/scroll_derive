@@ -99,3 +99,40 @@ pub fn derive_pwrite(input: TokenStream) -> TokenStream {
     let gen = impl_pwrite(&ast);
     gen.parse().unwrap()
 }
+
+fn size_with(name: &syn::Ident) -> quote::Tokens {
+    quote! {
+        impl ::scroll::ctx::SizeWith for #name {
+            type Units = usize;
+            #[inline]
+            fn size_with(_ctx: &::scroll::ctx::DefaultCtx) -> Self::Units {
+                ::core::mem::size_of::<Self>()
+            }
+        }
+    }
+}
+
+fn impl_size_with(ast: &syn::MacroInput) -> quote::Tokens {
+    let name = &ast.ident;
+    match &ast.body {
+        &syn::Body::Struct(ref data) => {
+            match data {
+                &syn::VariantData::Struct(_) => {
+                    size_with(name)
+                },
+                _ => {
+                    panic!("SizeWith can only be derived for a regular struct with public fields")
+                }
+            }
+        },
+        _ => panic!("SizeWith can only be derived for structs")
+    }
+}
+
+#[proc_macro_derive(SizeWith)]
+pub fn derive_sizewith(input: TokenStream) -> TokenStream {
+    let s = input.to_string();
+    let ast = syn::parse_macro_input(&s).unwrap();
+    let gen = impl_size_with(&ast);
+    gen.parse().unwrap()
+}
