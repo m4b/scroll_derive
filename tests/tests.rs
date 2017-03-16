@@ -10,15 +10,28 @@ struct Data {
 
 use scroll::{Pread, Pwrite, Buffer, LE};
 
-fn main (){
+#[test]
+fn test_data (){
     let bytes = Buffer::new([0xefu8, 0xbe, 0xad, 0xde, 0, 0, 0, 0, 0, 0, 224, 63]);
-    let data: Data = bytes.pread(0, LE).unwrap();
+    let data: Data = bytes.pread_with(0, LE).unwrap();
     println!("data: {:?}", &data);
     assert_eq!(data.id, 0xdeadbeefu32);
     assert_eq!(data.timestamp, 0.5f64);
     let mut bytes2 = Buffer::with(0, ::std::mem::size_of::<Data>());
-    bytes2.pwrite(data, 0, LE).unwrap();
-    let data: Data = bytes.pread(0, LE).unwrap();
-    let data2: Data = bytes2.pread(0, LE).unwrap();
+    bytes2.pwrite_with(data, 0, LE).unwrap();
+    let data: Data = bytes.pread_with(0, LE).unwrap();
+    let data2: Data = bytes2.pread_with(0, LE).unwrap();
     assert_eq!(data, data2);
+}
+
+#[derive(Debug, PartialEq, Pread, Pwrite)]
+struct Data2 {
+  name: [u8; 32],
+}
+
+#[test]
+fn test_array (){
+    let bytes = Buffer::with(0, 64);
+    let data: Data2 = bytes.pread_with(0, LE).unwrap();
+    println!("data: {:?}", &data);
 }

@@ -11,8 +11,22 @@ fn impl_struct(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens {
     let items: Vec<_> = fields.iter().map(|f| {
         let ident = &f.ident;
         let ty = &f.ty;
-        quote! {
-            #ident: src.gread_with::<#ty>(offset, ctx)?
+        match ty {
+            &syn::Ty::Array(_, ref constexpr) => {
+                match constexpr {
+                    &syn::ConstExpr::Lit(syn::Lit::Int(size, _)) => {
+                        quote! {
+                            #ident: { let mut __tmp: #ty = [0; #size as usize]; src.gread_inout_with(offset, &mut __tmp, ctx)?; __tmp }
+                        }
+                    },
+                    _ => panic!("Pread derive with bad array constexpr")
+                }
+            },
+            _ => {
+                quote! {
+                    #ident: src.gread_with::<#ty>(offset, ctx)?
+                }
+            }
         }
     }).collect();
     
@@ -57,8 +71,20 @@ pub fn derive_pread(input: TokenStream) -> TokenStream {
 fn impl_try_into_ctx(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens {
     let items: Vec<_> = fields.iter().map(|f| {
         let ident = &f.ident;
-        quote! {
-            dst.gwrite_with(self.#ident, offset, ctx)?
+        let ty = &f.ty;
+        match ty {
+            &syn::Ty::Array(_, _) => {
+                quote! {
+                    for i in 0..self.#ident.len() {
+                        dst.gwrite_with(self.#ident[i], offset, ctx)?;
+                    }
+                }
+            },
+            _ => {
+                quote! {
+                    dst.gwrite_with(self.#ident, offset, ctx)?
+                }
+            }
         }
     }).collect();
     
