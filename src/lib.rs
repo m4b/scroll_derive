@@ -132,7 +132,7 @@ fn size_with(name: &syn::Ident) -> quote::Tokens {
             type Units = usize;
             #[inline]
             fn size_with(_ctx: &::scroll::ctx::DefaultCtx) -> Self::Units {
-                ::core::mem::size_of::<Self>()
+                ::std::mem::size_of::<Self>()
             }
         }
     }

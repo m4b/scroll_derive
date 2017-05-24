@@ -8,7 +8,7 @@ struct Data {
   timestamp: f64,
 }
 
-use scroll::{Pread, Pwrite, Buffer, LE};
+use scroll::{Pread, Pwrite, Gread, Buffer, LE};
 
 #[test]
 fn test_data (){
@@ -33,5 +33,17 @@ struct Data2 {
 fn test_array (){
     let bytes = Buffer::with(0, 64);
     let data: Data2 = bytes.pread_with(0, LE).unwrap();
+    println!("data: {:?}", &data);
+}
+
+#[derive(Debug, PartialEq, Pread, Pwrite, SizeWith)]
+struct Data3 {
+  name: u32,
+}
+
+#[test]
+fn test_sizewith (){
+    let bytes = Buffer::with(0, 64);
+    let data: Data3 = bytes.gread_with(&mut 0, LE).unwrap();
     println!("data: {:?}", &data);
 }
