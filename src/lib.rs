@@ -127,12 +127,13 @@ pub fn derive_pwrite(input: TokenStream) -> TokenStream {
 }
 
 fn size_with(name: &syn::Ident) -> quote::Tokens {
+    let size = quote! { ::std::mem::size_of::<#name>() };
     quote! {
         impl ::scroll::ctx::SizeWith for #name {
             type Units = usize;
             #[inline]
             fn size_with(_ctx: &::scroll::ctx::DefaultCtx) -> Self::Units {
-                ::std::mem::size_of::<Self>()
+                #size
             }
         }
     }
