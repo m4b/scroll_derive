@@ -1,5 +1,5 @@
 # scroll_derive
-Macros 1.1 implementing #[derive(Pread, Pwrite)]
+Macros 1.1 implementing #[derive(Pread, Pwrite)] for https://github.com/m4b/scroll
 
 Add derive annotations to your POD seamlessly and easily:
 
