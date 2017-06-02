@@ -18,13 +18,13 @@ use scroll::{Pread, Pwrite, Buffer, LE};
 
 fn main (){
     let bytes = Buffer::new([0xefu8, 0xbe, 0xad, 0xde, 0, 0, 0, 0, 0, 0, 224, 63]);
-    let data: Data = bytes.pread(0, LE).unwrap();
+    let data: Data = bytes.pread_with(0, LE).unwrap();
     println!("data: {:?}", &data);
     assert_eq!(data.id, 0xdeadbeefu32);
     let mut bytes2 = Buffer::with(0, ::std::mem::size_of::<Data>());
     bytes2.pwrite(data, 0, LE).unwrap();
-    let data: Data = bytes.pread(0, LE).unwrap();
-    let data2: Data = bytes2.pread(0, LE).unwrap();
+    let data: Data = bytes.pread_with(0, LE).unwrap();
+    let data2: Data = bytes2.pread_with(0, LE).unwrap();
     assert_eq!(data, data2);
 }
 ```
