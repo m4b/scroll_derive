@@ -31,11 +31,11 @@ fn impl_struct(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens {
     }).collect();
     
     quote! {
-        impl<'a> ::scroll::ctx::TryFromCtx<'a> for #name where #name: 'a {
+        impl<'a> ::scroll::ctx::TryFromCtx<'a, ::scroll::Endian> for #name where #name: 'a {
             type Error = ::scroll::Error;
-            fn try_from_ctx(src: &'a [u8], (mut offset, ctx): (usize, ::scroll::Endian)) -> ::std::result::Result<Self, Self::Error> {
+            fn try_from_ctx(src: &'a [u8], ctx: ::scroll::Endian) -> ::std::result::Result<Self, Self::Error> {
                 use ::scroll::Gread;
-                let mut offset = &mut offset;
+                let mut offset = &mut 0;
                 let data  = #name { #(#items,)* };
                 Ok(data)
             }
@@ -89,11 +89,11 @@ fn impl_try_into_ctx(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens 
     }).collect();
     
     quote! {
-        impl ::scroll::ctx::TryIntoCtx for #name {
+        impl ::scroll::ctx::TryIntoCtx<::scroll::Endian> for #name {
             type Error = ::scroll::Error;
-            fn try_into_ctx(self, mut dst: &mut [u8], (mut offset, ctx): (usize, ::scroll::Endian)) -> ::std::result::Result<(), Self::Error> {
+            fn try_into_ctx(self, mut dst: &mut [u8], ctx: ::scroll::Endian) -> ::std::result::Result<(), Self::Error> {
                 use ::scroll::Gwrite;
-                let mut offset = &mut offset;
+                let mut offset = &mut 0;
                 #(#items;)*;
                 Ok(())
             }
@@ -129,10 +129,10 @@ pub fn derive_pwrite(input: TokenStream) -> TokenStream {
 fn size_with(name: &syn::Ident) -> quote::Tokens {
     let size = quote! { ::std::mem::size_of::<#name>() };
     quote! {
-        impl ::scroll::ctx::SizeWith for #name {
+        impl ::scroll::ctx::SizeWith<::scroll::Endian> for #name {
             type Units = usize;
             #[inline]
-            fn size_with(_ctx: &::scroll::ctx::DefaultCtx) -> Self::Units {
+            fn size_with(_ctx: &::scroll::Endian) -> Self::Units {
                 #size
             }
         }
