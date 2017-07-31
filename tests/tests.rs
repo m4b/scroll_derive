@@ -107,3 +107,22 @@ fn test_pread_arrays (){
     assert_eq!(data.arr2, [0xdead, 0xbeef]);
     assert_eq!(*offset, ::std::mem::size_of::<Data5>());
 }
+
+
+#[derive(Debug, PartialEq, Pread, SizeWith)]
+#[repr(C)]
+struct Data6 {
+    id: u32,
+    name: [u8; 5],
+}
+
+#[test]
+fn test_array_copy (){
+    let bytes = [0xde, 0xed, 0xef, 0xbe, 0x68, 0x65, 0x6c, 0x6c, 0x0];
+    let data: Data6 = bytes.pread_with(0, LE).unwrap();
+    let name: &str = data.name.pread(0).unwrap();
+    println!("data: {:?}", &data);
+    println!("data.name: {:?}", name);
+    assert_eq!(data.id, 0xbeefedde);
+    assert_eq!(name, "hell");
+}
