@@ -198,7 +198,7 @@ fn impl_cread_struct(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens 
     }).collect();
 
     quote! {
-        impl<'a> ::scroll::ctx::FromCtx<::scroll::Endian> for #name where #name: 'a {
+        impl ::scroll::ctx::FromCtx<::scroll::Endian> for #name {
             fn from_ctx(src: &[u8], ctx: ::scroll::Endian) -> Self {
                 use ::scroll::Cread;
                 let mut offset = &mut 0;
