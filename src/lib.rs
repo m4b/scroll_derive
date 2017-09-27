@@ -36,7 +36,7 @@ fn impl_struct(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens {
             type Size = usize;
             fn try_from_ctx(src: &'a [u8], ctx: ::scroll::Endian) -> ::std::result::Result<(Self, Self::Size), Self::Error> {
                 use ::scroll::Pread;
-                let mut offset = &mut 0;
+                let offset = &mut 0;
                 let data  = #name { #(#items,)* };
                 Ok((data, *offset))
             }
@@ -93,9 +93,9 @@ fn impl_try_into_ctx(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens 
         impl ::scroll::ctx::TryIntoCtx<::scroll::Endian> for #name {
             type Error = ::scroll::Error;
             type Size = usize;
-            fn try_into_ctx(self, mut dst: &mut [u8], ctx: ::scroll::Endian) -> ::std::result::Result<Self::Size, Self::Error> {
+            fn try_into_ctx(self, dst: &mut [u8], ctx: ::scroll::Endian) -> ::std::result::Result<Self::Size, Self::Error> {
                 use ::scroll::Pwrite;
-                let mut offset = &mut 0;
+                let offset = &mut 0;
                 #(#items;)*;
                 Ok(*offset)
             }
@@ -201,7 +201,7 @@ fn impl_cread_struct(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens 
         impl ::scroll::ctx::FromCtx<::scroll::Endian> for #name {
             fn from_ctx(src: &[u8], ctx: ::scroll::Endian) -> Self {
                 use ::scroll::Cread;
-                let mut offset = &mut 0;
+                let offset = &mut 0;
                 let data = #name { #(#items,)* };
                 data
             }
@@ -260,9 +260,9 @@ fn impl_into_ctx(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens {
 
     quote! {
         impl ::scroll::ctx::IntoCtx<::scroll::Endian> for #name {
-            fn into_ctx(self, mut dst: &mut [u8], ctx: ::scroll::Endian) {
+            fn into_ctx(self, dst: &mut [u8], ctx: ::scroll::Endian) {
                 use ::scroll::Cwrite;
-                let mut offset = &mut 0;
+                let offset = &mut 0;
                 #(#items;)*;
                 ()
             }
