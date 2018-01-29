@@ -34,7 +34,7 @@ fn impl_struct(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens {
         impl<'a> ::scroll::ctx::TryFromCtx<'a, ::scroll::Endian> for #name where #name: 'a {
             type Error = ::scroll::Error;
             type Size = usize;
-            fn try_from_ctx(src: &'a [u8], ctx: ::scroll::Endian) -> ::std::result::Result<(Self, Self::Size), Self::Error> {
+            fn try_from_ctx(src: &'a [u8], ctx: ::scroll::Endian) -> ::scroll::export::result::Result<(Self, Self::Size), Self::Error> {
                 use ::scroll::Pread;
                 let offset = &mut 0;
                 let data  = #name { #(#items,)* };
@@ -93,7 +93,7 @@ fn impl_try_into_ctx(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens 
         impl ::scroll::ctx::TryIntoCtx<::scroll::Endian> for #name {
             type Error = ::scroll::Error;
             type Size = usize;
-            fn try_into_ctx(self, dst: &mut [u8], ctx: ::scroll::Endian) -> ::std::result::Result<Self::Size, Self::Error> {
+            fn try_into_ctx(self, dst: &mut [u8], ctx: ::scroll::Endian) -> ::scroll::export::result::Result<Self::Size, Self::Error> {
                 use ::scroll::Pwrite;
                 let offset = &mut 0;
                 #(#items;)*;
@@ -134,7 +134,7 @@ fn size_with(name: &syn::Ident) -> quote::Tokens {
             type Units = usize;
             #[inline]
             fn size_with(_ctx: &::scroll::Endian) -> Self::Units {
-                ::std::mem::size_of::<#name>()
+                ::scroll::export::mem::size_of::<#name>()
             }
         }
     }
@@ -173,7 +173,7 @@ fn impl_cread_struct(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens 
             &syn::Ty::Array(ref arrty, ref constexpr) => {
                 match constexpr {
                     &syn::ConstExpr::Lit(syn::Lit::Int(size, _)) => {
-                        let incr = quote! { ::std::mem::size_of::<#arrty>() };
+                        let incr = quote! { ::scroll::export::mem::size_of::<#arrty>() };
                         quote! {
                             #ident: {
                                 let mut __tmp: #ty = [0; #size as usize];
@@ -189,7 +189,7 @@ fn impl_cread_struct(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens 
                 }
             },
             _ => {
-                let size = quote! { ::std::mem::size_of::<#ty>() };
+                let size = quote! { ::scroll::export::mem::size_of::<#ty>() };
                 quote! {
                     #ident: { let res = src.cread_with::<#ty>(*offset, ctx); *offset += #size; res }
                 }
@@ -238,11 +238,11 @@ fn impl_into_ctx(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens {
     let items: Vec<_> = fields.iter().map(|f| {
         let ident = &f.ident;
         let ty = &f.ty;
-        let size = quote! { ::std::mem::size_of::<#ty>() };
+        let size = quote! { ::scroll::export::mem::size_of::<#ty>() };
         match ty {
             &syn::Ty::Array(ref arrty, _) => {
                 quote! {
-                    let size = ::std::mem::size_of::<#arrty>();
+                    let size = ::scroll::export::mem::size_of::<#arrty>();
                     for i in 0..self.#ident.len() {
                         dst.cwrite_with(self.#ident[i], *offset, ctx);
                         *offset += size;
