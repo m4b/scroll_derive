@@ -7,14 +7,15 @@ extern crate quote;
 
 use proc_macro::TokenStream;
 
-fn impl_struct(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens {
-    let items: Vec<_> = fields.iter().map(|f| {
+fn impl_struct(name: &syn::Ident, fields: &syn::FieldsNamed) -> quote::Tokens {
+    let items: Vec<_> = fields.named.iter().map(|f| {
         let ident = &f.ident;
         let ty = &f.ty;
         match ty {
-            &syn::Ty::Array(_, ref constexpr) => {
-                match constexpr {
-                    &syn::ConstExpr::Lit(syn::Lit::Int(size, _)) => {
+            &syn::Type::Array(ref array) => {
+                match array.len {
+                    syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Int(ref int), ..}) => {
+                        let size = int.value();
                         quote! {
                             #ident: { let mut __tmp: #ty = [0; #size as usize]; src.gread_inout_with(offset, &mut __tmp, ctx)?; __tmp }
                         }
@@ -44,13 +45,13 @@ fn impl_struct(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens {
     }
 }
 
-fn impl_try_from_ctx(ast: &syn::MacroInput) -> quote::Tokens {
+fn impl_try_from_ctx(ast: &syn::DeriveInput) -> quote::Tokens {
     let name = &ast.ident;
-    match &ast.body {
-        &syn::Body::Struct(ref data) => {
-            match data {
-                &syn::VariantData::Struct(ref fields) => {
-                    impl_struct(name, &fields)
+    match ast.data {
+        syn::Data::Struct(ref data) => {
+            match data.fields {
+                syn::Fields::Named(ref fields) => {
+                    impl_struct(name, fields)
                 },
                 _ => {
                     panic!("Pread can only be derived for a regular struct with public fields")
@@ -63,18 +64,17 @@ fn impl_try_from_ctx(ast: &syn::MacroInput) -> quote::Tokens {
 
 #[proc_macro_derive(Pread)]
 pub fn derive_pread(input: TokenStream) -> TokenStream {
-    let s = input.to_string();
-    let ast = syn::parse_macro_input(&s).unwrap();
+    let ast: syn::DeriveInput = syn::parse(input).unwrap();
     let gen = impl_try_from_ctx(&ast);
-    gen.parse().unwrap()
+    gen.into()
 }
 
-fn impl_try_into_ctx(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens {
-    let items: Vec<_> = fields.iter().map(|f| {
+fn impl_try_into_ctx(name: &syn::Ident, fields: &syn::FieldsNamed) -> quote::Tokens {
+    let items: Vec<_> = fields.named.iter().map(|f| {
         let ident = &f.ident;
         let ty = &f.ty;
         match ty {
-            &syn::Ty::Array(_, _) => {
+            &syn::Type::Array(_) => {
                 quote! {
                     for i in 0..self.#ident.len() {
                         dst.gwrite_with(self.#ident[i], offset, ctx)?;
@@ -103,13 +103,13 @@ fn impl_try_into_ctx(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens 
     }
 }
 
-fn impl_pwrite(ast: &syn::MacroInput) -> quote::Tokens {
+fn impl_pwrite(ast: &syn::DeriveInput) -> quote::Tokens {
     let name = &ast.ident;
-    match &ast.body {
-        &syn::Body::Struct(ref data) => {
-            match data {
-                &syn::VariantData::Struct(ref fields) => {
-                    impl_try_into_ctx(name, &fields)
+    match ast.data {
+        syn::Data::Struct(ref data) => {
+            match data.fields {
+                syn::Fields::Named(ref fields) => {
+                    impl_try_into_ctx(name, fields)
                 },
                 _ => {
                     panic!("Pwrite can only be derived for a regular struct with public fields")
@@ -122,10 +122,9 @@ fn impl_pwrite(ast: &syn::MacroInput) -> quote::Tokens {
 
 #[proc_macro_derive(Pwrite)]
 pub fn derive_pwrite(input: TokenStream) -> TokenStream {
-    let s = input.to_string();
-    let ast = syn::parse_macro_input(&s).unwrap();
+    let ast: syn::DeriveInput = syn::parse(input).unwrap();
     let gen = impl_pwrite(&ast);
-    gen.parse().unwrap()
+    gen.into()
 }
 
 fn size_with(name: &syn::Ident) -> quote::Tokens {
@@ -140,12 +139,12 @@ fn size_with(name: &syn::Ident) -> quote::Tokens {
     }
 }
 
-fn impl_size_with(ast: &syn::MacroInput) -> quote::Tokens {
+fn impl_size_with(ast: &syn::DeriveInput) -> quote::Tokens {
     let name = &ast.ident;
-    match &ast.body {
-        &syn::Body::Struct(ref data) => {
-            match data {
-                &syn::VariantData::Struct(_) => {
+    match ast.data {
+        syn::Data::Struct(ref data) => {
+            match data.fields {
+                syn::Fields::Named(_) => {
                     size_with(name)
                 },
                 _ => {
@@ -159,20 +158,21 @@ fn impl_size_with(ast: &syn::MacroInput) -> quote::Tokens {
 
 #[proc_macro_derive(SizeWith)]
 pub fn derive_sizewith(input: TokenStream) -> TokenStream {
-    let s = input.to_string();
-    let ast = syn::parse_macro_input(&s).unwrap();
+    let ast: syn::DeriveInput = syn::parse(input).unwrap();
     let gen = impl_size_with(&ast);
-    gen.parse().unwrap()
+    gen.into()
 }
 
-fn impl_cread_struct(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens {
-    let items: Vec<_> = fields.iter().map(|f| {
+fn impl_cread_struct(name: &syn::Ident, fields: &syn::FieldsNamed) -> quote::Tokens {
+    let items: Vec<_> = fields.named.iter().map(|f| {
         let ident = &f.ident;
         let ty = &f.ty;
         match ty {
-            &syn::Ty::Array(ref arrty, ref constexpr) => {
-                match constexpr {
-                    &syn::ConstExpr::Lit(syn::Lit::Int(size, _)) => {
+            &syn::Type::Array(ref array) => {
+                let arrty = &array.elem;
+                match array.len {
+                    syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Int(ref int), ..}) => {
+                        let size = int.value();
                         let incr = quote! { ::scroll::export::mem::size_of::<#arrty>() };
                         quote! {
                             #ident: {
@@ -209,13 +209,13 @@ fn impl_cread_struct(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens 
     }
 }
 
-fn impl_from_ctx(ast: &syn::MacroInput) -> quote::Tokens {
+fn impl_from_ctx(ast: &syn::DeriveInput) -> quote::Tokens {
     let name = &ast.ident;
-    match &ast.body {
-        &syn::Body::Struct(ref data) => {
-            match data {
-                &syn::VariantData::Struct(ref fields) => {
-                    impl_cread_struct(name, &fields)
+    match ast.data {
+        syn::Data::Struct(ref data) => {
+            match data.fields {
+                syn::Fields::Named(ref fields) => {
+                    impl_cread_struct(name, fields)
                 },
                 _ => {
                     panic!("IOread can only be derived for a regular struct with public fields")
@@ -228,19 +228,19 @@ fn impl_from_ctx(ast: &syn::MacroInput) -> quote::Tokens {
 
 #[proc_macro_derive(IOread)]
 pub fn derive_ioread(input: TokenStream) -> TokenStream {
-    let s = input.to_string();
-    let ast = syn::parse_macro_input(&s).unwrap();
+    let ast: syn::DeriveInput = syn::parse(input).unwrap();
     let gen = impl_from_ctx(&ast);
-    gen.parse().unwrap()
+    gen.into()
 }
 
-fn impl_into_ctx(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens {
-    let items: Vec<_> = fields.iter().map(|f| {
+fn impl_into_ctx(name: &syn::Ident, fields: &syn::FieldsNamed) -> quote::Tokens {
+    let items: Vec<_> = fields.named.iter().map(|f| {
         let ident = &f.ident;
         let ty = &f.ty;
         let size = quote! { ::scroll::export::mem::size_of::<#ty>() };
         match ty {
-            &syn::Ty::Array(ref arrty, _) => {
+            &syn::Type::Array(ref array) => {
+                let arrty = &array.elem;
                 quote! {
                     let size = ::scroll::export::mem::size_of::<#arrty>();
                     for i in 0..self.#ident.len() {
@@ -270,13 +270,13 @@ fn impl_into_ctx(name: &syn::Ident, fields: &[syn::Field]) -> quote::Tokens {
     }
 }
 
-fn impl_iowrite(ast: &syn::MacroInput) -> quote::Tokens {
+fn impl_iowrite(ast: &syn::DeriveInput) -> quote::Tokens {
     let name = &ast.ident;
-    match &ast.body {
-        &syn::Body::Struct(ref data) => {
-            match data {
-                &syn::VariantData::Struct(ref fields) => {
-                    impl_into_ctx(name, &fields)
+    match ast.data {
+        syn::Data::Struct(ref data) => {
+            match data.fields {
+                syn::Fields::Named(ref fields) => {
+                    impl_into_ctx(name, fields)
                 },
                 _ => {
                     panic!("IOwrite can only be derived for a regular struct with public fields")
@@ -289,8 +289,7 @@ fn impl_iowrite(ast: &syn::MacroInput) -> quote::Tokens {
 
 #[proc_macro_derive(IOwrite)]
 pub fn derive_iowrite(input: TokenStream) -> TokenStream {
-    let s = input.to_string();
-    let ast = syn::parse_macro_input(&s).unwrap();
+    let ast: syn::DeriveInput = syn::parse(input).unwrap();
     let gen = impl_iowrite(&ast);
-    gen.parse().unwrap()
+    gen.into()
 }
