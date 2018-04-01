@@ -13,8 +13,8 @@ description = "A macros 1.1 derive implementation for Pread and Pwrite traits fr
 proc-macro = true
 
 [dependencies]
-syn = "0.12"
-quote = "0.4"
+syn = "0.13"
+quote = "0.5"
 
 [dev-dependencies.scroll]
 version = "0.9"
