@@ -35,6 +35,7 @@ fn impl_struct(name: &syn::Ident, fields: &syn::FieldsNamed) -> quote::Tokens {
         impl<'a> ::scroll::ctx::TryFromCtx<'a, ::scroll::Endian> for #name where #name: 'a {
             type Error = ::scroll::Error;
             type Size = usize;
+            #[inline]
             fn try_from_ctx(src: &'a [u8], ctx: ::scroll::Endian) -> ::scroll::export::result::Result<(Self, Self::Size), Self::Error> {
                 use ::scroll::Pread;
                 let offset = &mut 0;
@@ -93,6 +94,7 @@ fn impl_try_into_ctx(name: &syn::Ident, fields: &syn::FieldsNamed) -> quote::Tok
         impl ::scroll::ctx::TryIntoCtx<::scroll::Endian> for #name {
             type Error = ::scroll::Error;
             type Size = usize;
+            #[inline]
             fn try_into_ctx(self, dst: &mut [u8], ctx: ::scroll::Endian) -> ::scroll::export::result::Result<Self::Size, Self::Error> {
                 use ::scroll::Pwrite;
                 let offset = &mut 0;
@@ -199,6 +201,7 @@ fn impl_cread_struct(name: &syn::Ident, fields: &syn::FieldsNamed) -> quote::Tok
 
     quote! {
         impl ::scroll::ctx::FromCtx<::scroll::Endian> for #name {
+            #[inline]
             fn from_ctx(src: &[u8], ctx: ::scroll::Endian) -> Self {
                 use ::scroll::Cread;
                 let offset = &mut 0;
@@ -260,6 +263,7 @@ fn impl_into_ctx(name: &syn::Ident, fields: &syn::FieldsNamed) -> quote::Tokens 
 
     quote! {
         impl ::scroll::ctx::IntoCtx<::scroll::Endian> for #name {
+            #[inline]
             fn into_ctx(self, dst: &mut [u8], ctx: ::scroll::Endian) {
                 use ::scroll::Cwrite;
                 let offset = &mut 0;
