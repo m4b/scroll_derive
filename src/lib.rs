@@ -1,13 +1,14 @@
 #![recursion_limit="1024"]
 
 extern crate proc_macro;
-extern crate syn;
+extern crate proc_macro2;
 #[macro_use]
 extern crate quote;
+extern crate syn;
 
 use proc_macro::TokenStream;
 
-fn impl_struct(name: &syn::Ident, fields: &syn::FieldsNamed) -> quote::Tokens {
+fn impl_struct(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro2::TokenStream {
     let items: Vec<_> = fields.named.iter().map(|f| {
         let ident = &f.ident;
         let ty = &f.ty;
@@ -46,7 +47,7 @@ fn impl_struct(name: &syn::Ident, fields: &syn::FieldsNamed) -> quote::Tokens {
     }
 }
 
-fn impl_try_from_ctx(ast: &syn::DeriveInput) -> quote::Tokens {
+fn impl_try_from_ctx(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     let name = &ast.ident;
     match ast.data {
         syn::Data::Struct(ref data) => {
@@ -70,7 +71,7 @@ pub fn derive_pread(input: TokenStream) -> TokenStream {
     gen.into()
 }
 
-fn impl_try_into_ctx(name: &syn::Ident, fields: &syn::FieldsNamed) -> quote::Tokens {
+fn impl_try_into_ctx(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro2::TokenStream {
     let items: Vec<_> = fields.named.iter().map(|f| {
         let ident = &f.ident;
         let ty = &f.ty;
@@ -105,7 +106,7 @@ fn impl_try_into_ctx(name: &syn::Ident, fields: &syn::FieldsNamed) -> quote::Tok
     }
 }
 
-fn impl_pwrite(ast: &syn::DeriveInput) -> quote::Tokens {
+fn impl_pwrite(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     let name = &ast.ident;
     match ast.data {
         syn::Data::Struct(ref data) => {
@@ -129,7 +130,7 @@ pub fn derive_pwrite(input: TokenStream) -> TokenStream {
     gen.into()
 }
 
-fn size_with(name: &syn::Ident) -> quote::Tokens {
+fn size_with(name: &syn::Ident) -> proc_macro2::TokenStream {
     quote! {
         impl ::scroll::ctx::SizeWith<::scroll::Endian> for #name {
             type Units = usize;
@@ -141,7 +142,7 @@ fn size_with(name: &syn::Ident) -> quote::Tokens {
     }
 }
 
-fn impl_size_with(ast: &syn::DeriveInput) -> quote::Tokens {
+fn impl_size_with(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     let name = &ast.ident;
     match ast.data {
         syn::Data::Struct(ref data) => {
@@ -165,7 +166,7 @@ pub fn derive_sizewith(input: TokenStream) -> TokenStream {
     gen.into()
 }
 
-fn impl_cread_struct(name: &syn::Ident, fields: &syn::FieldsNamed) -> quote::Tokens {
+fn impl_cread_struct(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro2::TokenStream {
     let items: Vec<_> = fields.named.iter().map(|f| {
         let ident = &f.ident;
         let ty = &f.ty;
@@ -212,7 +213,7 @@ fn impl_cread_struct(name: &syn::Ident, fields: &syn::FieldsNamed) -> quote::Tok
     }
 }
 
-fn impl_from_ctx(ast: &syn::DeriveInput) -> quote::Tokens {
+fn impl_from_ctx(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     let name = &ast.ident;
     match ast.data {
         syn::Data::Struct(ref data) => {
@@ -236,7 +237,7 @@ pub fn derive_ioread(input: TokenStream) -> TokenStream {
     gen.into()
 }
 
-fn impl_into_ctx(name: &syn::Ident, fields: &syn::FieldsNamed) -> quote::Tokens {
+fn impl_into_ctx(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro2::TokenStream {
     let items: Vec<_> = fields.named.iter().map(|f| {
         let ident = &f.ident;
         let ty = &f.ty;
@@ -274,7 +275,7 @@ fn impl_into_ctx(name: &syn::Ident, fields: &syn::FieldsNamed) -> quote::Tokens 
     }
 }
 
-fn impl_iowrite(ast: &syn::DeriveInput) -> quote::Tokens {
+fn impl_iowrite(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     let name = &ast.ident;
     match ast.data {
         syn::Data::Struct(ref data) => {
