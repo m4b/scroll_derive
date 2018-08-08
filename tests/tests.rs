@@ -76,6 +76,12 @@ fn test_iowrite (){
     assert_eq!(data.arr, [0xbe, 0xaf]);
 
     let mut bytes_null = [0u8; 8];
+    bytes_null.cwrite_with(&data, 0, LE);
+    println!("bytes_null: {:?}", &bytes_null);
+    println!("bytes     : {:?}", &bytes);
+    assert_eq!(bytes_null, bytes);
+
+    let mut bytes_null = [0u8; 8];
     bytes_null.cwrite_with(data, 0, LE);
     println!("bytes_null: {:?}", &bytes_null);
     println!("bytes     : {:?}", &bytes);
