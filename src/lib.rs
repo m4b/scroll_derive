@@ -139,13 +139,35 @@ pub fn derive_pwrite(input: TokenStream) -> TokenStream {
     gen.into()
 }
 
-fn size_with(name: &syn::Ident) -> proc_macro2::TokenStream {
+fn size_with(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro2::TokenStream {
+    let items: Vec<_> = fields.named.iter().map(|f| {
+        let ty = &f.ty;
+        match ty {
+            &syn::Type::Array(ref array) => {
+                let elem = &array.elem;
+                match array.len {
+                    syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Int(ref int), ..}) => {
+                        let size = int.value() as usize;
+                        quote! {
+                            (#size * <#elem>::size_with(ctx))
+                        }
+                    },
+                    _ => panic!("Pread derive with bad array constexpr")
+                }
+            },
+            _ => {
+                quote! {
+                    <#ty>::size_with(ctx)
+                }
+            }
+        }
+    }).collect();
     quote! {
         impl ::scroll::ctx::SizeWith<::scroll::Endian> for #name {
             type Units = usize;
             #[inline]
-            fn size_with(_ctx: &::scroll::Endian) -> Self::Units {
-                ::scroll::export::mem::size_of::<#name>()
+            fn size_with(ctx: &::scroll::Endian) -> Self::Units {
+                0 #(+ #items)*
             }
         }
     }
@@ -156,8 +178,8 @@ fn impl_size_with(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     match ast.data {
         syn::Data::Struct(ref data) => {
             match data.fields {
-                syn::Fields::Named(_) => {
-                    size_with(name)
+                syn::Fields::Named(ref fields) => {
+                    size_with(name, fields)
                 },
                 _ => {
                     panic!("SizeWith can only be derived for a regular struct with public fields")

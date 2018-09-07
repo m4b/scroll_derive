@@ -9,6 +9,7 @@ struct Data {
 }
 
 use scroll::{Pread, Pwrite, Cread, Cwrite, LE};
+use scroll::ctx::SizeWith;
 
 #[test]
 fn test_data (){
@@ -131,4 +132,31 @@ fn test_array_copy (){
     println!("data.name: {:?}", name);
     assert_eq!(data.id, 0xbeefedde);
     assert_eq!(name, "hell");
+}
+
+#[derive(Pread, SizeWith)]
+struct Data7A {
+    pub y: u64,
+    pub x: u32,
+}
+
+#[derive(Pread, SizeWith)]
+struct Data7B {
+    pub a: Data7A,
+}
+
+#[test]
+fn test_nested_struct() {
+    const BYTES: [u8; 12] = [
+        // y: u64
+        1, 0, 0, 0, 0, 0, 0, 0,
+        // x: u32
+        2, 0, 0, 0,
+    ];
+    let size = Data7B::size_with(&LE);
+    let mut read = 0;
+    let b: Data7B = BYTES.gread_with(&mut read, LE).unwrap();
+    assert_eq!(b.a.y, 1);
+    assert_eq!(b.a.x, 2);
+    assert_eq!(read, size);
 }
