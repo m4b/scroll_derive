@@ -154,6 +154,7 @@ fn test_nested_struct() {
         2, 0, 0, 0,
     ];
     let size = Data7B::size_with(&LE);
+    assert_eq!(size, 12);
     let mut read = 0;
     let b: Data7B = BYTES.gread_with(&mut read, LE).unwrap();
     assert_eq!(b.a.y, 1);

@@ -12,7 +12,7 @@ struct Data {
 
 use scroll::{Pread, Pwrite, Cread, LE};
 
-fn main (){
+fn main () {
     let bytes = [0xefu8, 0xbe, 0xad, 0xde, 0, 0, 0, 0, 0, 0, 224, 63, 0xad, 0xde, 0xef, 0xbe];
     let data: Data = bytes.pread_with(0, LE).unwrap();
     println!("data: {:?}", &data);
