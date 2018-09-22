@@ -79,13 +79,13 @@ fn impl_try_into_ctx(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro
             &syn::Type::Array(_) => {
                 quote! {
                     for i in 0..self.#ident.len() {
-                        dst.gwrite_with(self.#ident[i], offset, ctx)?;
+                        dst.gwrite_with(&self.#ident[i], offset, ctx)?;
                     }
                 }
             },
             _ => {
                 quote! {
-                    dst.gwrite_with(self.#ident, offset, ctx)?
+                    dst.gwrite_with(&self.#ident, offset, ctx)?
                 }
             }
         }

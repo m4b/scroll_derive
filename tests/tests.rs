@@ -134,30 +134,27 @@ fn test_array_copy (){
     assert_eq!(name, "hell");
 }
 
-#[derive(Pread, SizeWith)]
+#[derive(Debug, PartialEq, Eq, Pread, Pwrite, SizeWith)]
 struct Data7A {
     pub y: u64,
     pub x: u32,
 }
 
-#[derive(Pread, SizeWith)]
+#[derive(Debug, PartialEq, Eq, Pread, Pwrite, SizeWith)]
 struct Data7B {
     pub a: Data7A,
 }
 
 #[test]
 fn test_nested_struct() {
-    const BYTES: [u8; 12] = [
-        // y: u64
-        1, 0, 0, 0, 0, 0, 0, 0,
-        // x: u32
-        2, 0, 0, 0,
-    ];
+    let b = Data7B { a: Data7A { y: 1, x: 2 } };
     let size = Data7B::size_with(&LE);
     assert_eq!(size, 12);
+    let mut bytes = vec![0; size];
+    let written = bytes.pwrite_with(&b, 0, LE).unwrap();
+    assert_eq!(written, size);
     let mut read = 0;
-    let b: Data7B = BYTES.gread_with(&mut read, LE).unwrap();
-    assert_eq!(b.a.y, 1);
-    assert_eq!(b.a.x, 2);
+    let b2: Data7B = bytes.gread_with(&mut read, LE).unwrap();
     assert_eq!(read, size);
+    assert_eq!(b, b2);
 }
