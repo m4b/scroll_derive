@@ -12,8 +12,8 @@ fn impl_struct(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro2::Tok
     let items: Vec<_> = fields.named.iter().map(|f| {
         let ident = &f.ident;
         let ty = &f.ty;
-        match ty {
-            &syn::Type::Array(ref array) => {
+        match *ty {
+            syn::Type::Array(ref array) => {
                 match array.len {
                     syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Int(ref int), ..}) => {
                         let size = int.value();
@@ -75,8 +75,8 @@ fn impl_try_into_ctx(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro
     let items: Vec<_> = fields.named.iter().map(|f| {
         let ident = &f.ident;
         let ty = &f.ty;
-        match ty {
-            &syn::Type::Array(_) => {
+        match *ty {
+            syn::Type::Array(_) => {
                 quote! {
                     for i in 0..self.#ident.len() {
                         dst.gwrite_with(&self.#ident[i], offset, ctx)?;
@@ -142,8 +142,8 @@ pub fn derive_pwrite(input: TokenStream) -> TokenStream {
 fn size_with(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro2::TokenStream {
     let items: Vec<_> = fields.named.iter().map(|f| {
         let ty = &f.ty;
-        match ty {
-            &syn::Type::Array(ref array) => {
+        match *ty {
+            syn::Type::Array(ref array) => {
                 let elem = &array.elem;
                 match array.len {
                     syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Int(ref int), ..}) => {
@@ -201,8 +201,8 @@ fn impl_cread_struct(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro
     let items: Vec<_> = fields.named.iter().map(|f| {
         let ident = &f.ident;
         let ty = &f.ty;
-        match ty {
-            &syn::Type::Array(ref array) => {
+        match *ty {
+            syn::Type::Array(ref array) => {
                 let arrty = &array.elem;
                 match array.len {
                     syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Int(ref int), ..}) => {
@@ -273,8 +273,8 @@ fn impl_into_ctx(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro2::T
         let ident = &f.ident;
         let ty = &f.ty;
         let size = quote! { ::scroll::export::mem::size_of::<#ty>() };
-        match ty {
-            &syn::Type::Array(ref array) => {
+        match *ty {
+            syn::Type::Array(ref array) => {
                 let arrty = &array.elem;
                 quote! {
                     let size = ::scroll::export::mem::size_of::<#arrty>();
