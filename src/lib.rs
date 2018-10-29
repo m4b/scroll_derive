@@ -35,9 +35,8 @@ fn impl_struct(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro2::Tok
     quote! {
         impl<'a> ::scroll::ctx::TryFromCtx<'a, ::scroll::Endian> for #name where #name: 'a {
             type Error = ::scroll::Error;
-            type Size = usize;
             #[inline]
-            fn try_from_ctx(src: &'a [u8], ctx: ::scroll::Endian) -> ::scroll::export::result::Result<(Self, Self::Size), Self::Error> {
+            fn try_from_ctx(src: &'a [u8], ctx: ::scroll::Endian) -> ::scroll::export::result::Result<(Self, usize), Self::Error> {
                 use ::scroll::Pread;
                 let offset = &mut 0;
                 let data  = #name { #(#items,)* };
@@ -94,9 +93,8 @@ fn impl_try_into_ctx(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro
     quote! {
         impl<'a> ::scroll::ctx::TryIntoCtx<::scroll::Endian> for &'a #name {
             type Error = ::scroll::Error;
-            type Size = usize;
             #[inline]
-            fn try_into_ctx(self, dst: &mut [u8], ctx: ::scroll::Endian) -> ::scroll::export::result::Result<Self::Size, Self::Error> {
+            fn try_into_ctx(self, dst: &mut [u8], ctx: ::scroll::Endian) -> ::scroll::export::result::Result<usize, Self::Error> {
                 use ::scroll::Pwrite;
                 let offset = &mut 0;
                 #(#items;)*;
@@ -106,9 +104,8 @@ fn impl_try_into_ctx(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro
 
         impl ::scroll::ctx::TryIntoCtx<::scroll::Endian> for #name {
             type Error = ::scroll::Error;
-            type Size = usize;
             #[inline]
-            fn try_into_ctx(self, dst: &mut [u8], ctx: ::scroll::Endian) -> ::scroll::export::result::Result<Self::Size, Self::Error> {
+            fn try_into_ctx(self, dst: &mut [u8], ctx: ::scroll::Endian) -> ::scroll::export::result::Result<usize, Self::Error> {
                 (&self).try_into_ctx(dst, ctx)
             }
         }
@@ -164,9 +161,8 @@ fn size_with(name: &syn::Ident, fields: &syn::FieldsNamed) -> proc_macro2::Token
     }).collect();
     quote! {
         impl ::scroll::ctx::SizeWith<::scroll::Endian> for #name {
-            type Units = usize;
             #[inline]
-            fn size_with(ctx: &::scroll::Endian) -> Self::Units {
+            fn size_with(ctx: &::scroll::Endian) -> usize {
                 0 #(+ #items)*
             }
         }
